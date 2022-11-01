@@ -12,9 +12,9 @@ const prioridadSchema = new Schema({
   nombre: {
     type: String,
     required: [true, "Debe ingresar un nombre"],
-    unique: true,
   },
   estado: { type: Boolean, default: true },
+  foranea: { type: mongoose.Types.ObjectId, ref: "userWorker" },
 });
 
 // validacion para único elemento

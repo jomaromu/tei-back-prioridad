@@ -15,11 +15,13 @@ export class PrioridadClass {
 
   crearPrioridad(req: any, resp: Response): void {
     const idCreador = new mongoose.Types.ObjectId(req.usuario._id);
+    const foranea = new mongoose.Types.ObjectId(req.body.foranea);
     const nombre = req.body.nombre;
     const estado: boolean = req.body.estado;
 
     const nuevaPrioridad = new prioridadModel({
       idCreador,
+      foranea,
       nombre,
       estado,
     });
@@ -48,7 +50,8 @@ export class PrioridadClass {
   }
 
   editarPrioridad(req: any, resp: Response): any {
-    const id = new mongoose.Types.ObjectId(req.body.id);
+    const _id = new mongoose.Types.ObjectId(req.body.id);
+    const foranea = new mongoose.Types.ObjectId(req.body.foranea);
     const nombre: string = req.body.nombre;
     const estado: boolean = req.body.estado;
 
@@ -57,8 +60,8 @@ export class PrioridadClass {
       estado,
     };
 
-    prioridadModel.findById(
-      id,
+    prioridadModel.findOne(
+      { _id, foranea },
       (err: CallbackError, prioridadDB: PrioridadModelInterface) => {
         if (err) {
           return resp.json({
@@ -79,8 +82,8 @@ export class PrioridadClass {
           query.nombre = prioridadDB.nombre;
         }
 
-        prioridadModel.findByIdAndUpdate(
-          id,
+        prioridadModel.findOneAndUpdate(
+          { _id, foranea },
           query,
           { new: true },
           (err: CallbackError, prioridadDB: any) => {
@@ -108,8 +111,10 @@ export class PrioridadClass {
   }
 
   obtenerTodasPrioridades(req: any, resp: Response): void {
+    const foranea = new mongoose.Types.ObjectId(req.get("foranea"));
+
     prioridadModel
-      .find({})
+      .find({ foranea })
       .populate("idCreador")
       .exec((err: any, prioridadesDB: any) => {
         if (err) {
@@ -128,10 +133,11 @@ export class PrioridadClass {
   }
 
   obtenerPrioridad(req: any, resp: Response): void {
-    const id = req.get("id");
+    const _id = new mongoose.Types.ObjectId(req.get("id"));
+    const foranea = new mongoose.Types.ObjectId(req.get("foranea"));
 
-    prioridadModel.findById(
-      id,
+    prioridadModel.findOne(
+      { _id, foranea },
       (err: CallbackError, prioridadDB: PrioridadModelInterface) => {
         if (err) {
           return resp.json({
@@ -157,34 +163,40 @@ export class PrioridadClass {
   }
 
   eliminarPrioridad(req: any, resp: Response): void {
-    const id = new mongoose.Types.ObjectId(req.get("id"));
+    const _id = new mongoose.Types.ObjectId(req.get("id"));
+    const foranea = new mongoose.Types.ObjectId(req.get("foranea"));
 
-    prioridadModel.findByIdAndDelete(id, {}, (err: any, prioridadDB: any) => {
-      if (err) {
-        return resp.json({
-          ok: false,
-          mensaje: `Error interno`,
-          err,
-        });
-      } else {
-        const server = Server.instance;
-        server.io.emit("cargar-prioridades", {
-          ok: true,
-        });
-        return resp.json({
-          ok: true,
-          mensaje: "Prioridad eliminada",
-          prioridadDB,
-        });
+    prioridadModel.findOneAndDelete(
+      { _id, foranea },
+      {},
+      (err: any, prioridadDB: any) => {
+        if (err) {
+          return resp.json({
+            ok: false,
+            mensaje: `Error interno`,
+            err,
+          });
+        } else {
+          const server = Server.instance;
+          server.io.emit("cargar-prioridades", {
+            ok: true,
+          });
+          return resp.json({
+            ok: true,
+            mensaje: "Prioridad eliminada",
+            prioridadDB,
+          });
+        }
       }
-    });
+    );
   }
 
   actualizarPrioriadesOrdenadas(req: any, resp: Response): void {
     const colPrioridad: string = req.body.colPrioridad;
     const prioridades = req.body.prioridades;
+    const foranea = new mongoose.Types.ObjectId(req.body.foranea);
     prioridadOrdenada.findOneAndUpdate(
-      { colPrioridad },
+      { colPrioridad, foranea },
       { $set: { prioridades } },
       { upsert: true, new: true },
       (err: any, prioridadesOrdenadaDB: any) => {
@@ -205,10 +217,10 @@ export class PrioridadClass {
 
   obtenerPrioridadesOrdenadas(req: any, resp: Response): void {
     const colPrioridad: string = req.get("colPrioridad");
+    const foranea = new mongoose.Types.ObjectId(req.get("foranea"));
 
-    console.log(colPrioridad);
     prioridadOrdenada.findOne(
-      { colPrioridad },
+      { colPrioridad, foranea },
       (err: any, prioridadesOrdenadaDB: any) => {
         if (err) {
           return resp.json({

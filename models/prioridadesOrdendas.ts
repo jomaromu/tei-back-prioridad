@@ -9,6 +9,7 @@ const prioridadOrdenadaSchema = new Schema({
     type: String,
   },
   prioridades: { type: Array },
+  foranea: { type: mongoose.Types.ObjectId, ref: "userWorker" },
 });
 
 export = mongoose.model<PrioridadesOrdendasInterface>(
